@@ -349,8 +349,6 @@
     if (auth && state.authToken) headers.Authorization = `Bearer ${state.authToken}`;
     if (Object.keys(headers).length) requestOptions.headers = headers;
 
-    validateApiBaseForBrowser(apiBase);
-
     let response;
     try {
       response = await fetch(`${apiBase}${path}`, requestOptions);
@@ -370,24 +368,6 @@
 
     const text = await response.text();
     return text ? JSON.parse(text) : null;
-  }
-
-  function validateApiBaseForBrowser(apiBase) {
-    let url;
-    try {
-      url = new URL(apiBase);
-    } catch {
-      throw new Error("API 地址格式不正确");
-    }
-
-    const localHosts = new Set(["localhost", "127.0.0.1", "::1"]);
-    if (window.location.protocol === "https:" && url.protocol === "http:") {
-      throw new Error("当前网页是 HTTPS，Safari 会拦截 HTTP API，请使用 HTTPS API 或用 HTTP 地址打开网站");
-    }
-
-    if (localHosts.has(url.hostname) && !localHosts.has(window.location.hostname)) {
-      throw new Error("手机上不能使用 127.0.0.1/localhost 作为 API，请填写后端所在电脑或服务器的局域网 IP");
-    }
   }
 
   function renderApps() {
