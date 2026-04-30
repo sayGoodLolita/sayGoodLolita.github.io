@@ -197,21 +197,9 @@
   }
 
   async function handleLogout() {
-    const hadToken = Boolean(state.authToken);
     setStatus("正在退出登录...");
-
-    try {
-      if (hadToken) {
-        await request("/auth/logout", {
-          method: "POST",
-        });
-      }
-    } catch {
-      // Token may already be invalid. Local logout should still complete.
-    } finally {
-      clearAuth();
-      requireLogin("已退出登录");
-    }
+    clearAuth();
+    requireLogin("已退出登录");
   }
 
   async function loadDashboard() {
