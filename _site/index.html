@@ -1,201 +1,244 @@
-<!-- 首页及其他页面的布局-Layout -->
 <!DOCTYPE html>
-<html>
+<html lang="zh-CN">
 <head>
-<script data-ad-client="ca-pub-7750316483921149" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
-<!-- 引入head标签 -->
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-sclable=0">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="X-UA-Compatible" content="ie=edge">
-<meta name="description" content="分享技术和生活" />
-<meta name="keywords" content="saygoodlolita, cheney, cheneymars" />
-<link rel="stylesheet" href="/assets/css/style.css">
-<link rel="stylesheet" href="/assets/css/media.css">
-<link rel="stylesheet" href="/assets/css/animate.min.css">
-<link rel="stylesheet" href="/assets/css/pygments/pygments_default.css">
-<link rel="stylesheet" href="/assets/css/github-markdown.css">
-<!-- SNS-icon -->
-<script src="//at.alicdn.com/t/font_856428_y9z6nq7zf5.js"></script>
-<!-- share.css -->
-<link rel="stylesheet" href="/assets/css/share.min.css">
-<!-- font -->
-<link rel="stylesheet" href="/assets/css/font.css">
-<!-- <link href="https://fonts.googleapis.com/css?family=Kaushan+Script|Pacifico|Ubuntu|Roboto+Mono|Source+Sans+Pro" rel="stylesheet"> -->
-
-<!-- Favicon -->
-<link href="/assets/profile.jpeg" rel="shortcut icon" />
-<link href="/assets/profile.jpeg" rel="apple-touch-icon-precomposed" />
-<!-- Android Lolipop Theme Color -->
-<!-- <meta name="theme-color" content="#1464FB"> -->
-<title>Cheney</title>
-<!-- 百度统计 -->
-
-<script>
-var _hmt = _hmt || [];
-(function() {
-  var hm = document.createElement("script");
-  hm.src = "https://hm.baidu.com/hm.js?";
-  var s = document.getElementsByTagName("script")[0];
-  s.parentNode.insertBefore(hm, s);
-})();
-</script>
-
-<!-- 谷歌分析 -->
-
+<meta name="description" content="Apple IAP notification user analytics dashboard.">
+<meta name="theme-color" content="#f4f1ea">
+<link rel="stylesheet" href="/assets/css/site.css">
+<script src="/assets/js/site.js" defer></script>
+<title>Apple Notification Analytics</title>
 
 </head>
 <body>
-<!-- 页面主体 -->
-<header id="index-header">
-  <div class="top-center">
-      <div class="logo">
-          <a href="/" title="my awesome webtitle">Cheney</a>
+  <main class="app-shell">
+  <header class="topbar">
+    <div>
+      <p class="eyebrow">Apple IAP Notification</p>
+      <h1>用户数据看板</h1>
+    </div>
+    <div class="topbar-controls">
+      <div class="session-card" id="sessionCard" hidden>
+        <span id="currentUserName">未登录</span>
+        <small id="currentUserRole">-</small>
+        <button id="logoutButton" class="secondary-button compact-button" type="button">退出</button>
       </div>
-      <nav class="top-nav">
-          <ul>
-              
-                <li><a href="/">首页</a></li>
-              
-                <li><a href="/tags.html">标签</a></li>
-              
-                <li><a href="/timeline.html">时间线</a></li>
-              
-                <li><a href="/about.html">关于博主</a></li>
-              
-          </ul>
-      </nav>
-      <div id="top-boot">
-        <a href="javascript:;" id="boot1" style="display:block;" onclick="document.getElementById('boot-area').style.display='block';document.getElementById('boot1').style.display='none';document.getElementById('boot2').style.display='block';"><img src="/assets/boot.png" alt=""></a>
-        <a href="javascript:;" id="boot2" style="display: none;" onclick="document.getElementById('boot-area').style.display='none';document.getElementById('boot1').style.display='block';document.getElementById('boot2').style.display='none';"><img src="/assets/boot.png" alt=""></a>
+      <div class="api-control">
+        <label for="apiBase">API</label>
+        <input id="apiBase" type="url" value="http://127.0.0.1:8080" spellcheck="false">
       </div>
-  </div>
+      <div class="api-readonly" id="apiReadonly" hidden>
+        <span>API</span>
+        <strong id="apiReadonlyValue">-</strong>
+      </div>
+    </div>
+  </header>
 
-</header>
+  <section class="filter-panel glass-panel">
+    <div class="field app-filter-field">
+      <label>App</label>
+      <div class="app-picker" id="appPicker">
+        <button id="appPickerButton" class="app-picker-button" type="button" aria-expanded="false">
+          <span id="selectedAppsPreview" class="selected-apps-preview">全部 App</span>
+          <span class="chevron">⌄</span>
+        </button>
+        <div id="appPickerMenu" class="app-picker-menu" hidden>
+          <button id="clearAppSelection" class="app-option all-option" type="button">
+            <span class="app-icon-placeholder">All</span>
+            <span>
+              <strong>全部 App</strong>
+              <small>不限制 Bundle ID</small>
+            </span>
+          </button>
+          <div id="appOptions" class="app-options"></div>
+        </div>
+      </div>
+    </div>
+    <div class="field">
+      <label for="countrySelect">国家/地区</label>
+      <select id="countrySelect">
+        <option value="">全部国家</option>
+      </select>
+    </div>
+    <div class="field date-field">
+      <label for="startDateInput">开始日期</label>
+      <div class="date-control">
+        <button id="prevRange" class="icon-button" type="button" aria-label="上一个区间">‹</button>
+        <input id="startDateInput" type="date">
+      </div>
+    </div>
+    <div class="field date-field">
+      <label for="endDateInput">结束日期</label>
+      <div class="date-control">
+        <input id="endDateInput" type="date">
+        <button id="nextRange" class="icon-button" type="button" aria-label="下一个区间">›</button>
+      </div>
+    </div>
+    <div class="filter-actions">
+      <button id="reloadButton" class="primary-button" type="button">刷新数据</button>
+    </div>
+  </section>
 
-<div id="boot-area">
-    <ul>
-        
-          <a href="/"><li>首页</li></a>
-        
-          <a href="/tags.html"><li>标签</li></a>
-        
-          <a href="/timeline.html"><li>时间线</li></a>
-        
-          <a href="/about.html"><li>关于博主</li></a>
-        
-    </ul>
-</div>
+  <section class="status-row">
+    <div id="statusText">准备加载数据</div>
+    <div id="lastUpdated">-</div>
+  </section>
 
-<main>
-    <div class="wow fadeIn top" data-wow-duration="3.5s" >
-    <span class="wow fadeInUp" data-wow-delay="0.2s">Cheney's Blog</span>
-    <span class="wow fadeInUp" data-wow-delay="0.4s">iOS Developer</span>
-    <span class="wow fadeInUp" data-wow-delay="0.6s"></span>
-</div>
+  <section class="summary-board glass-panel" aria-label="汇总数据">
+    <div class="summary-head">
+      <div>
+        <p class="eyebrow">Overview</p>
+        <h2>区间总汇总</h2>
+      </div>
+      <small id="metricSpendSource" class="module-note">未录入投入</small>
+    </div>
+    <div class="summary-modules">
+      <div class="summary-module activity-module">
+        <div class="module-title">
+          <span>01</span>
+          <strong>用户状态</strong>
+        </div>
+        <div class="metric-grid activity-grid">
+          <div><span>用户数</span><strong id="metricUsers">0</strong></div>
+          <div><span>取消数</span><strong id="metricCanceledUsers">0</strong></div>
+          <div class="admin-only"><span>退款数</span><strong id="metricRefundUsers">0</strong></div>
+          <div><span>扣款数</span><strong id="metricPaidUsers">0</strong></div>
+          <div class="admin-only"><span>活跃扣款数</span><strong id="metricActivePaidUsers">0</strong></div>
+          <div class="admin-only"><span>留存率</span><strong id="metricRetention">-</strong></div>
+        </div>
+      </div>
+      <div class="summary-module finance-module">
+        <div class="module-title">
+          <span>02</span>
+          <strong>投放回收</strong>
+        </div>
+        <div class="metric-grid finance-grid">
+          <div><span>CPA</span><strong id="metricCpa">0</strong></div>
+          <div><span>扣费单价</span><strong id="metricPaidCpa">0</strong></div>
+          <div class="admin-only"><span>净利润</span><strong id="metricProfit">0</strong></div>
+          <div class="admin-only"><span>收入</span><strong id="metricIncome">0</strong></div>
+          <div><span>支出</span><strong id="metricSpend">0</strong></div>
+          <div class="roi-metric admin-only"><span>ROI</span><strong id="metricRoi">-</strong></div>
+        </div>
+      </div>
+    </div>
+  </section>
 
-    <ul class="post-list">
-      
-  <a href="/2018/08/23/iOS-Block-%E7%9A%84%E5%8E%9F%E7%90%86(%E5%9B%9B).html">
-      <li class="fadeInUp animated">
-          
-          <div class="post-cover" style="background:url(../assets/test.png);background-size:cover;background-position:center;"></div>
-          
-          <section class="post-preview">
-              <h2 class="post-title">iOS Block 的原理(四)</h2>
-              
-              
-              <p class="post-excerpt">iOS Block 的原理(四)</p>
-              
-          </section>
-          <footer class="post-tags">
-                
-                    
-                    <a href=tags.html#iOS底层原理 class="post-tag">iOS底层原理</a>
-                    
-                
-                <time class="post-date" datetime="18-08-23">23 Aug 2018</time>
-          </footer>
-      </li>
-  </a>
+  <section class="daily-panel glass-panel">
+    <div class="panel-title">
+      <div>
+        <p class="eyebrow">Daily Breakdown</p>
+        <h2>每日汇总</h2>
+      </div>
+      <span id="dailyHint" class="panel-hint">投入会按日期保存到服务端</span>
+    </div>
+    <div class="daily-table-wrap">
+      <table class="daily-table">
+        <thead>
+          <tr>
+            <th>日期</th>
+            <th>用户数</th>
+            <th>取消数</th>
+            <th>扣款数</th>
+            <th class="admin-only">退款数</th>
+            <th class="admin-only">活跃扣款数</th>
+            <th>CPA</th>
+            <th>扣费单价</th>
+            <th class="admin-only">ROI</th>
+            <th class="admin-only">收入</th>
+            <th>支出</th>
+          </tr>
+        </thead>
+        <tbody id="dailySummaryTable">
+          <tr>
+            <td colspan="11" class="empty-cell">暂无数据</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
 
-  <a href="/2018/08/22/iOS-Category-%E7%9A%84%E5%8E%9F%E7%90%86(%E4%B8%89).html">
-      <li class="fadeInUp animated">
-          
-          <div class="post-cover" style="background:url(../assets/test.png);background-size:cover;background-position:center;"></div>
-          
-          <section class="post-preview">
-              <h2 class="post-title">iOS Category 的原理(三)</h2>
-              
-              
-              <p class="post-excerpt">iOS Category 的原理(三)</p>
-              
-          </section>
-          <footer class="post-tags">
-                
-                    
-                    <a href=tags.html#iOS底层原理 class="post-tag">iOS底层原理</a>
-                    
-                
-                <time class="post-date" datetime="18-08-22">22 Aug 2018</time>
-          </footer>
-      </li>
-  </a>
-
-
-    </ul>
 </main>
-<nav class="pagination">
-  <div class="page-links">
-    
-        <a href="/" class="page-link" title="Index Page">1</a>
-    
-    
-    
-        <!-- 
-            <a href="/page2/" class="page-link" title="Next Page">&raquo;</a>
-         -->
-        <a href="/page2/" class="page-link" title="Next Page">&raquo;</a>
-    
-    
-  </div>
 
-</nav>
+<div id="expenseModal" class="modal-backdrop" hidden>
+  <form id="expenseForm" class="expense-modal" autocomplete="off">
+    <div class="modal-head">
+      <div>
+        <p class="eyebrow">Expense</p>
+        <h2>录入投入</h2>
+      </div>
+      <button id="expenseCloseButton" class="icon-button" type="button" aria-label="关闭">×</button>
+    </div>
+    <div class="modal-grid">
+      <div class="field">
+        <label for="expenseAmount">金额</label>
+        <input id="expenseAmount" name="amount" type="number" min="0" step="0.01" required placeholder="0">
+      </div>
+      <div class="field">
+        <label for="expenseAdPlatform">广告平台</label>
+        <select id="expenseAdPlatform" name="adPlatform" required>
+          <option value="Google">Google</option>
+          <option value="Meta">Meta</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="expenseStorefront">国家</label>
+        <select id="expenseStorefront" name="storefront" required>
+          <option value="USA">USA</option>
+          <option value="CAN">CAN</option>
+          <option value="GBR">GBR</option>
+          <option value="AUS">AUS</option>
+          <option value="JPN">JPN</option>
+          <option value="CHN">CHN</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="expenseCurrency">货币</label>
+        <select id="expenseCurrency" name="currency" required>
+          <option value="USD">USD</option>
+          <option value="CNY">CNY</option>
+          <option value="JPY">JPY</option>
+          <option value="EUR">EUR</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <span id="expensePreview" class="expense-preview">保存为 0</span>
+      <button id="expenseCancelButton" class="secondary-button" type="button">取消</button>
+      <button class="primary-button" type="submit">保存投入</button>
+    </div>
+  </form>
+</div>
 
-<footer id="bottom">
-  <br>
-  <span>Cheney ©
-  
-  
-    2018
-    -
-  
-  2019
-  <br>
-  Powered by <a href="https://www.jekyll.com.cn/">Jekyll</a> | <a href="https://github.com/xukimseven/HardCandy-Jekyll">HardCandy-Jekyll</a></span>
-</footer>
-
-
-
-<!-- 引用wow.js的动画效果 -->
-<script src="/assets/js/wow.js"></script>
-<script>
-    var wow = new WOW({
-        boxClass: 'wow',
-        animateClass: 'animated',
-        // offset: 5,
-        mobile: true,
-        live: true
-    });
-    wow.init();
-</script>
-<!-- 页面刷新回到顶部 -->
-<script>
-    window.onbeforeunload = function(){
-        //刷新后页面自动回到顶部
-        document.documentElement.scrollTop = 0;  //ie下
-        document.body.scrollTop = 0;  //非ie
-    }
-</script>
+<div id="loginModal" class="modal-backdrop auth-backdrop" hidden>
+  <form id="loginForm" class="auth-modal" autocomplete="on">
+    <div class="modal-head auth-head">
+      <div>
+        <p class="eyebrow">Account</p>
+        <h2>登录看板</h2>
+      </div>
+    </div>
+    <div class="auth-grid">
+      <div class="field">
+        <label for="loginApiBase">API</label>
+        <input id="loginApiBase" type="url" value="http://127.0.0.1:8080" spellcheck="false" required>
+      </div>
+      <div class="field">
+        <label for="loginUsername">用户名</label>
+        <input id="loginUsername" name="username" type="text" autocomplete="username" required>
+      </div>
+      <div class="field">
+        <label for="loginPassword">密码</label>
+        <input id="loginPassword" name="password" type="password" autocomplete="current-password" required>
+      </div>
+      <p id="loginError" class="auth-error" hidden></p>
+    </div>
+    <div class="modal-actions auth-actions">
+      <button id="loginSubmitButton" class="primary-button" type="submit">登录</button>
+    </div>
+  </form>
+</div>
 
 </body>
 </html>
