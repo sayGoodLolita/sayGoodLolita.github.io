@@ -341,6 +341,7 @@
     const { auth = true, ...fetchOptions } = options;
     const requestOptions = { ...fetchOptions };
     const headers = { ...(requestOptions.headers || {}) };
+    const apiBase = cleanApiBase();
 
     if (requestOptions.body) {
       headers["Content-Type"] = headers["Content-Type"] || "application/json";
@@ -348,9 +349,11 @@
     if (auth && state.authToken) headers.Authorization = `Bearer ${state.authToken}`;
     if (Object.keys(headers).length) requestOptions.headers = headers;
 
+    validateApiBaseForBrowser(apiBase);
+
     let response;
     try {
-      response = await fetch(`${cleanApiBase()}${path}`, requestOptions);
+      response = await fetch(`${apiBase}${path}`, requestOptions);
     } catch {
       throw new Error("无法连接 API，可能是服务未启动或后端未开启 CORS");
     }
@@ -367,6 +370,24 @@
 
     const text = await response.text();
     return text ? JSON.parse(text) : null;
+  }
+
+  function validateApiBaseForBrowser(apiBase) {
+    let url;
+    try {
+      url = new URL(apiBase);
+    } catch {
+      throw new Error("API 地址格式不正确");
+    }
+
+    const localHosts = new Set(["localhost", "127.0.0.1", "::1"]);
+    if (window.location.protocol === "https:" && url.protocol === "http:") {
+      throw new Error("当前网页是 HTTPS，Safari 会拦截 HTTP API，请使用 HTTPS API 或用 HTTP 地址打开网站");
+    }
+
+    if (localHosts.has(url.hostname) && !localHosts.has(window.location.hostname)) {
+      throw new Error("手机上不能使用 127.0.0.1/localhost 作为 API，请填写后端所在电脑或服务器的局域网 IP");
+    }
   }
 
   function renderApps() {
@@ -454,8 +475,8 @@
 
   function renderSummary() {
     const totals = aggregateRows(state.dailyRows);
-    const cpa = totals.subscribe ? totals.spend / totals.subscribe : 0;
-    const paidCpa = totals.paid ? totals.income / totals.paid : 0;
+    const cpa = totals.spend > 0 && totals.subscribe ? totals.spend / totals.subscribe : null;
+    const paidCpa = totals.spend > 0 && totals.paid ? totals.spend / totals.paid : null;
     const retention = totals.paid ? totals.activePaid / totals.paid : null;
     const profit = totals.income - totals.spend;
     const roi = totals.spend > 0 ? totals.income / totals.spend : null;
@@ -466,8 +487,8 @@
     els.metricRefundUsers.textContent = formatInteger(totals.refund);
     els.metricActivePaidUsers.textContent = formatInteger(totals.activePaid);
     els.metricRetention.textContent = formatRate(retention);
-    els.metricCpa.textContent = formatUSD(cpa);
-    els.metricPaidCpa.textContent = formatUSD(paidCpa);
+    els.metricCpa.textContent = formatOptionalUSD(cpa);
+    els.metricPaidCpa.textContent = formatOptionalUSD(paidCpa);
     els.metricProfit.textContent = formatUSD(profit);
     els.metricSpend.textContent = formatUSD(totals.spend);
     els.metricIncome.textContent = formatUSD(totals.income);
@@ -487,8 +508,8 @@
       const refund = users.filter((user) => user.hasRefund).length;
       const income = sum(users, (user) => user.income);
       const spendInfo = spendForDate(date);
-      const cpa = subscribe ? spendInfo.usd / subscribe : 0;
-      const paidCpa = paid ? income / paid : 0;
+      const cpa = spendInfo.saved && subscribe ? spendInfo.usd / subscribe : null;
+      const paidCpa = spendInfo.saved && paid ? spendInfo.usd / paid : null;
       const roi = spendInfo.usd > 0 ? income / spendInfo.usd : null;
 
       return {
@@ -526,8 +547,8 @@
         <td>${formatInteger(row.paid)}</td>
         ${isEditor() ? "" : `<td>${formatInteger(row.refund)}</td>`}
         ${isEditor() ? "" : `<td>${formatInteger(row.activePaid)}</td>`}
-        <td>${formatUSD(row.cpa)}</td>
-        <td>${formatUSD(row.paidCpa)}</td>
+        <td>${formatOptionalUSD(row.cpa)}</td>
+        <td>${formatOptionalUSD(row.paidCpa)}</td>
         ${isEditor() ? "" : `<td>${formatRoi(row.roi)}</td>`}
         ${isEditor() ? "" : `<td>${formatUSD(row.income)}</td>`}
         <td>
@@ -1170,6 +1191,10 @@
 
   function formatUSD(value) {
     return `$${formatNumber(value)}`;
+  }
+
+  function formatOptionalUSD(value) {
+    return value === null ? "-" : formatUSD(value);
   }
 
   function formatRoi(value) {
