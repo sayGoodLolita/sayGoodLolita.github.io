@@ -71,8 +71,13 @@
     dailySummaryTable: $("dailySummaryTable"),
     expenseModal: $("expenseModal"),
     expenseForm: $("expenseForm"),
+    expenseListTitle: $("expenseListTitle"),
+    expenseList: $("expenseList"),
+    expenseAddButton: $("expenseAddButton"),
+    expenseFormTitle: $("expenseFormTitle"),
     expenseCloseButton: $("expenseCloseButton"),
     expenseCancelButton: $("expenseCancelButton"),
+    expenseSaveButton: $("expenseSaveButton"),
     expensePreview: $("expensePreview"),
     expenseAmount: $("expenseAmount"),
     expenseCurrency: $("expenseCurrency"),
@@ -131,6 +136,8 @@
     els.nextRange.addEventListener("click", () => shiftRange(1));
     els.reloadButton.addEventListener("click", loadUsers);
     els.dailySummaryTable.addEventListener("click", handleDailySpendClick);
+    els.expenseList.addEventListener("click", handleExpenseListClick);
+    els.expenseAddButton.addEventListener("click", startNewExpenseEntry);
     els.expenseForm.addEventListener("submit", handleExpenseSubmit);
     els.expenseAmount.addEventListener("input", updateExpensePreview);
     els.expenseCurrency.addEventListener("change", updateExpensePreview);
@@ -544,19 +551,10 @@
       return;
     }
 
-    const saved = expenseForDateAndProject(date, bundleIds[0]);
-    state.editingExpenseId = saved?.id || "";
     state.editingExpenseDate = date;
     state.editingExpenseProjectId = bundleIds[0];
-    state.editingExpenseUser = saved?.user || currentExpenseUser();
-    els.expenseAmount.value = saved ? formatExpenseInputAmount(saved) : "";
-    els.expenseCurrency.value = normalizeCurrency(saved?.currency || DEFAULT_CURRENCY);
-    els.expenseStorefront.value = saved?.storefront || DEFAULT_STORE_FRONT;
-    els.expenseAdPlatform.value = normalizeAdPlatform(saved?.adPlatform || DEFAULT_AD_PLATFORM);
-    syncEnhancedSelect(els.expenseCurrency);
-    syncEnhancedSelect(els.expenseStorefront);
-    syncEnhancedSelect(els.expenseAdPlatform);
-    updateExpensePreview();
+    renderExpenseList();
+    startNewExpenseEntry();
     els.expenseModal.hidden = false;
     els.expenseAmount.focus();
   }
@@ -568,6 +566,123 @@
     state.editingExpenseDate = "";
     state.editingExpenseProjectId = "";
     state.editingExpenseUser = "";
+    els.expenseList.innerHTML = "";
+  }
+
+  async function handleExpenseListClick(event) {
+    const deleteButton = event.target.closest("[data-delete-expense-id]");
+    if (deleteButton) {
+      await deleteExpenseEntry(deleteButton.dataset.deleteExpenseId);
+      return;
+    }
+
+    const button = event.target.closest("[data-edit-expense-id]");
+    if (!button) return;
+
+    const expense = state.expenses.find((item) => item.id === button.dataset.editExpenseId);
+    if (!expense) return;
+    startEditExpenseEntry(expense);
+  }
+
+  function renderExpenseList() {
+    const expenses = expensesForCurrentExpenseModal();
+    const total = sum(expenses, (expense) => convertToUSD(
+      expenseDisplayAmount(expense),
+      normalizeCurrency(expense.currency || DEFAULT_CURRENCY),
+    ));
+
+    els.expenseListTitle.textContent = `${state.editingExpenseDate} 投入明细`;
+    if (!expenses.length) {
+      els.expenseList.innerHTML = `<div class="expense-empty">当天还没有投入记录</div>`;
+      return;
+    }
+
+    els.expenseList.innerHTML = `
+      <div class="expense-list-total">
+        <span>合计</span>
+        <strong>${formatUSD(total)}</strong>
+      </div>
+      ${expenses.map((expense, index) => `
+        <div class="expense-item ${expense.id === state.editingExpenseId ? "is-editing" : ""}">
+          <div>
+            <strong>${formatUSD(convertToUSD(expenseDisplayAmount(expense), expense.currency))}</strong>
+            <span>${escapeHtml(formatExpenseInputAmount(expense))} ${escapeHtml(expense.currency)} · ${escapeHtml(expense.adPlatform || "-")}</span>
+          </div>
+          <small>${escapeHtml(expense.storefront || "-")}</small>
+          <div class="expense-item-actions">
+            <button class="tiny-action-button" type="button" data-edit-expense-id="${escapeHtml(expense.id)}" ${expense.id ? "" : "disabled"}>
+              ${expense.id === state.editingExpenseId ? "编辑中" : `修改 ${index + 1}`}
+            </button>
+            <button class="tiny-action-button danger-action-button" type="button" data-delete-expense-id="${escapeHtml(expense.id)}" ${expense.id ? "" : "disabled"}>
+              删除
+            </button>
+          </div>
+        </div>
+      `).join("")}
+    `;
+  }
+
+  function startNewExpenseEntry() {
+    state.editingExpenseId = "";
+    state.editingExpenseUser = currentExpenseUser();
+    els.expenseFormTitle.textContent = "新增投入";
+    els.expenseSaveButton.textContent = "新增投入";
+    els.expenseAmount.value = "";
+    els.expenseCurrency.value = DEFAULT_CURRENCY;
+    els.expenseStorefront.value = els.countrySelect.value || DEFAULT_STORE_FRONT;
+    els.expenseAdPlatform.value = DEFAULT_AD_PLATFORM;
+    syncExpenseSelects();
+    updateExpensePreview();
+    renderExpenseList();
+    els.expenseAmount.focus();
+  }
+
+  function startEditExpenseEntry(expense) {
+    state.editingExpenseId = expense.id || "";
+    state.editingExpenseUser = expense.user || currentExpenseUser();
+    els.expenseFormTitle.textContent = "修改投入";
+    els.expenseSaveButton.textContent = "保存修改";
+    els.expenseAmount.value = formatExpenseInputAmount(expense);
+    els.expenseCurrency.value = normalizeCurrency(expense.currency || DEFAULT_CURRENCY);
+    els.expenseStorefront.value = expense.storefront || DEFAULT_STORE_FRONT;
+    els.expenseAdPlatform.value = normalizeAdPlatform(expense.adPlatform || DEFAULT_AD_PLATFORM);
+    syncExpenseSelects();
+    updateExpensePreview();
+    renderExpenseList();
+    els.expenseAmount.focus();
+  }
+
+  async function deleteExpenseEntry(expenseId) {
+    if (!expenseId) return;
+
+    const expense = state.expenses.find((item) => item.id === expenseId);
+    if (!expense) return;
+
+    const label = `${formatExpenseInputAmount(expense)} ${expense.currency} · ${expense.adPlatform || "-"} · ${expense.storefront || "-"}`;
+    if (!window.confirm(`确认删除这条投入？\n${label}`)) return;
+
+    setBusy(true);
+    setStatus("正在删除投入...");
+    try {
+      await request(`/daily-expense/${expenseId}`, { method: "DELETE" });
+      removeExpense(expenseId);
+      if (state.editingExpenseId === expenseId) startNewExpenseEntry();
+      state.dailyRows = buildDailyRows();
+      renderSummary();
+      renderDailySummary();
+      renderExpenseList();
+      setStatus("投入已删除");
+    } catch (error) {
+      setStatus(`投入删除失败：${error.message}`);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function syncExpenseSelects() {
+    syncEnhancedSelect(els.expenseCurrency);
+    syncEnhancedSelect(els.expenseStorefront);
+    syncEnhancedSelect(els.expenseAdPlatform);
   }
 
   async function handleExpenseSubmit(event) {
@@ -604,7 +719,8 @@
       state.dailyRows = buildDailyRows();
       renderSummary();
       renderDailySummary();
-      closeExpenseModal();
+      renderExpenseList();
+      startNewExpenseEntry();
       setStatus("投入已保存到服务端");
     } catch (error) {
       setStatus(`投入保存失败：${error.message}`);
@@ -682,19 +798,20 @@
       });
   }
 
-  function expenseForDateAndProject(date, projectID) {
+  function expensesForCurrentExpenseModal() {
     const country = els.countrySelect.value;
-    const expenses = state.expenses
+    return state.expenses
       .filter((expense) => {
-        if (expenseDateString(expense) !== date) return false;
-        if (expense.projectID !== projectID) return false;
+        if (expenseDateString(expense) !== state.editingExpenseDate) return false;
+        if (expense.projectID !== state.editingExpenseProjectId) return false;
+        if (country && expense.storefront !== country) return false;
         return true;
+      })
+      .sort((a, b) => {
+        const platform = String(a.adPlatform || "").localeCompare(String(b.adPlatform || ""));
+        if (platform !== 0) return platform;
+        return String(a.storefront || "").localeCompare(String(b.storefront || ""));
       });
-
-    return expenses.find((expense) => !country || expense.storefront === country)
-      || expenses.find((expense) => expense.storefront === DEFAULT_STORE_FRONT)
-      || expenses[0]
-      || null;
   }
 
   function expenseDateString(expense) {
@@ -828,13 +945,14 @@
   function upsertExpense(expense) {
     if (!expense) return;
 
-    state.expenses = state.expenses.filter((item) => {
-      if (expense.id && item.id === expense.id) return false;
-      return !(expenseDateString(item) === expenseDateString(expense)
-        && item.projectID === expense.projectID
-        && item.storefront === expense.storefront);
-    });
+    if (expense.id) {
+      state.expenses = state.expenses.filter((item) => item.id !== expense.id);
+    }
     state.expenses.push(expense);
+  }
+
+  function removeExpense(expenseId) {
+    state.expenses = state.expenses.filter((expense) => expense.id !== expenseId);
   }
 
   function aggregateRows(rows) {

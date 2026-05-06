@@ -166,10 +166,18 @@
     <div class="modal-head">
       <div>
         <p class="eyebrow">Expense</p>
-        <h2>录入投入</h2>
+        <h2>管理投入</h2>
       </div>
       <button id="expenseCloseButton" class="icon-button" type="button" aria-label="关闭">×</button>
     </div>
+    <div class="expense-manager">
+      <div class="expense-manager-head">
+        <span id="expenseListTitle">当天投入</span>
+        <button id="expenseAddButton" class="tiny-action-button" type="button">新增一条</button>
+      </div>
+      <div id="expenseList" class="expense-list"></div>
+    </div>
+    <div class="expense-form-title" id="expenseFormTitle">新增投入</div>
     <div class="modal-grid">
       <div class="field">
         <label for="expenseAmount">金额</label>
@@ -206,7 +214,7 @@
     <div class="modal-actions">
       <span id="expensePreview" class="expense-preview">保存为 0</span>
       <button id="expenseCancelButton" class="secondary-button" type="button">取消</button>
-      <button class="primary-button" type="submit">保存投入</button>
+      <button id="expenseSaveButton" class="primary-button" type="submit">保存投入</button>
     </div>
   </form>
 </div>

@@ -1113,6 +1113,131 @@ tbody tr:last-child td {
   line-height: 1;
 }
 
+.expense-manager {
+  display: grid;
+  gap: 10px;
+  padding: 18px 22px 0;
+}
+
+.expense-manager-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 820;
+}
+
+.expense-list {
+  display: grid;
+  gap: 8px;
+}
+
+.expense-list-total,
+.expense-item,
+.expense-empty {
+  border: 1px solid rgba(23, 23, 23, 0.07);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.62);
+}
+
+.expense-list-total {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 760;
+}
+
+.expense-list-total strong {
+  color: var(--ink);
+  font-size: 15px;
+  white-space: nowrap;
+}
+
+.expense-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 12px;
+  transition: border-color 0.18s ease, background 0.18s ease, transform 0.18s ease;
+}
+
+.expense-item:hover,
+.expense-item.is-editing {
+  border-color: rgba(15, 118, 110, 0.2);
+  background: rgba(236, 253, 245, 0.62);
+}
+
+.expense-item.is-editing {
+  transform: translateY(-1px);
+}
+
+.expense-item div {
+  display: grid;
+  min-width: 0;
+  gap: 3px;
+}
+
+.expense-item strong {
+  color: var(--ink);
+  font-size: 16px;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.expense-item span,
+.expense-item small,
+.expense-empty {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 760;
+}
+
+.expense-item span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.expense-item small {
+  white-space: nowrap;
+}
+
+.expense-item-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.danger-action-button {
+  color: var(--red);
+  background: rgba(194, 65, 12, 0.08);
+}
+
+.danger-action-button:hover:not(:disabled) {
+  background: rgba(194, 65, 12, 0.14);
+}
+
+.expense-empty {
+  padding: 18px 12px;
+  text-align: center;
+}
+
+.expense-form-title {
+  margin: 16px 22px 0;
+  border-top: 1px solid rgba(23, 23, 23, 0.07);
+  padding-top: 16px;
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 860;
+}
+
 .modal-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
